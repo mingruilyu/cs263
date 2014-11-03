@@ -18,14 +18,14 @@ public class LoginRequest {
 	static String appid = "732083976882116";
 	static String appsecret = "eacc38539438a41c127ec7e1c6662994";
 	static String authUrl = "https://www.facebook.com/dialog/oauth";
-	static String redirectUrl = "http://localhost:8080/logindispatch.jsp";
+	static String redirectUrl = "http://lyumingrui1.appspot.com/logindispatch.jsp";
 	static String tokenUrl = "https://graph.facebook.com/oauth/access_token";
-	static String permission = "email,user_friends";
+	static String permission = "email,user_friends,user_birthday,user_hometown";
 	static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();	
 	
 	public static String getFacebookAuthURL() {
 		return authUrl + "?client_id=" + appid + "&redirect_uri=" + redirectUrl
-				+ "&scope=";// + permission;
+				+ "&scope=" + permission + "&auth_type=reauthenticate";
 	}
 
 	static public String getFacebookAccessToken(String faceCode)

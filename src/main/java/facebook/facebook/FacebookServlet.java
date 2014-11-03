@@ -35,12 +35,14 @@ public class FacebookServlet extends HttpServlet {
 		writer.print("<p>My link is " + thisuser.getLink() + "</p>");
 		writer.print("<p>My Locale is " + thisuser.getLocale() + "</p>");
 		writer.print("<p>My id is " + thisuser.getId() + "</p>");
-
+		writer.print("<p>My email is " + thisuser.getEmail() + "</p>");
+		writer.print("<p>My birthday is " + thisuser.getBirthday() + "</p>");
+		writer.print("<p>My hometown is " + thisuser.getHometown() + "</p>");
+		writer.print("<img src=\"https://graph.facebook.com/" + thisuser.getId() + "/picture?type=large\"/>");
 		for(Iterator<User> iterator = users.iterator(); iterator.hasNext(); ) {
 	        User user = (User)iterator.next();
-	        writer.print("<tr><td><img src=\"https://graph.facebook.com/"
-					+ user.getId() + "/picture\"/></td><td>"
-					+ user.getName() + "</td><td>" + user.getId()
+	        writer.print("<tr><td>"	+ user.getName() + "</td><td>" + user.getId() + "</td><td>" + 
+	        		"<img src=\"https://graph.facebook.com/" + user.getId() + "/picture?type=large\"/>"
 					+ "</td></tr>");
 	    }
 		writer.print("</table>");

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sign up</title>
+</head>
+<body>
+	<form action = "/signupprocess" method = "get" id = "info"></form>
+		<table>		
+			<tr>
+				<td>username</td>
+				<td><input type = "text" name = "username" form = "info"/></td>
+			</tr>
+			<tr>
+				<td>password</td>
+				<td><input type = "password" name = "password" /></td>
+			</tr>
+			<tr>
+				<td>confirm</td>
+				<td><input type = "password" name = "passwordconfirm" /></td>
+			</tr>
+			<tr>
+				<td>email</td>
+				<td><input type = "email" name = "email" /></td>
+			</tr>
+			<tr>
+				<td>gender</td>
+				<td>
+					<select name = "gender">
+						<option value = "male">male</option>
+						<option value = "female">female</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>birthdate(MM/DD/YYYY)</td>
+				<td><input type = "text" name = "birthdate" /></td>
+			</tr>
+			<tr>
+				<td>current location</td>
+				<td><input type = "text" name = "location"/></td>
+			</tr>
+			<tr>
+				<td><input type = "submit"></td>
+			</tr>
+		</table>
+</body>
+</html>
