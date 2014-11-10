@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Sign up</title>
+	<meta charset="UTF-8">
+	<title>Sign up</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"type="text/javascript" ></script>
 </head>
 <body>
-	<form action = "/signupprocess" method = "get" id = "info"></form>
+	<form action = "/signupprocessor" method = "post" id = "info"></form>
 		<table>		
 			<tr>
 				<td>username</td>
@@ -13,20 +14,20 @@
 			</tr>
 			<tr>
 				<td>password</td>
-				<td><input type = "password" name = "password" /></td>
+				<td><input type = "password" name = "password" form = "info"/></td>
 			</tr>
-			<tr>
+			<!--<tr>
 				<td>confirm</td>
 				<td><input type = "password" name = "passwordconfirm" /></td>
-			</tr>
+			</tr>  -->
 			<tr>
 				<td>email</td>
-				<td><input type = "email" name = "email" /></td>
+				<td><input type = "email" name = "email" form = "info"/></td>
 			</tr>
 			<tr>
 				<td>gender</td>
 				<td>
-					<select name = "gender">
+					<select name = "gender" form = "info">
 						<option value = "male">male</option>
 						<option value = "female">female</option>
 					</select>
@@ -34,15 +35,58 @@
 			</tr>
 			<tr>
 				<td>birthdate(MM/DD/YYYY)</td>
-				<td><input type = "text" name = "birthdate" /></td>
+				<td><input type = "text" name = "birthdate" form = "info"/></td>
 			</tr>
 			<tr>
 				<td>current location</td>
-				<td><input type = "text" name = "location"/></td>
+				<td><input type = "text" name = "location" form = "info"/></td>
 			</tr>
 			<tr>
-				<td><input type = "submit"></td>
+				<td><button id = "submitbutton">submit</button></td>
 			</tr>
 		</table>
+		<script type="text/javascript">
+		$(document).ready(submitEvent);
+		function submitEvent() {
+			$("#submitbutton").click(submitRequest);
+		}
+		function submitRequest() {
+			var userform = document.getElementById("info");
+			var userObj = {
+				username : userform.elements[0].value,
+				password : userform.elements[1].value,
+				email : userform.elements[2].value,
+				gender : userform.elements[3].value,
+				birthdate : userform.elements[4].value,
+				location : userform.elements[5].value
+			};
+			var userJson = JSON.stringify(userObj);
+			console.log(userJson);
+			alert(typeof(userJson));
+			// AJAX code to submit form.
+			$.ajax({
+				type: 'POST',
+				url: '/rest/signupprocessor/test',
+				data: userJson,
+				async: false,
+				//dataType: "json",
+				contentType: 'application/json',
+				success: function(result) {
+					console.log(result);
+					if (result == "created")  {
+						alert("created");
+						var url = "/login.jsp";    
+						$(location).attr('href',url);
+					}
+					else {
+						alert("already exist!");
+					}
+				},
+				error: function (response) {
+					alert("fail");
+				}
+			});
+		}
+		</script>
 </body>
 </html>
