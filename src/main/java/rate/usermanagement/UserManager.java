@@ -1,4 +1,4 @@
-package ratingapp.usermanagement;
+package rate.usermanagement;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -107,19 +107,14 @@ public class UserManager {
 	
 	public List<String> getConversationList() {
 		// return conversation ID
-	    List<String> IDList = new LinkedList<String>();
-	    Filter clientFilter_1 = new FilterPredicate("client_1", 
-	    										  	FilterOperator.EQUAL, 
-	    										  	user.getName());
-	    Filter clientFilter_2 = new FilterPredicate("client_2",
-	    											FilterOperator.EQUAL,
-	    											user.getName());
-	    CompositeFilter clientFilter = CompositeFilterOperator.and(clientFilter_1, clientFilter_2);
-	    Query query = new Query("conversationlist").setFilter(clientFilter).addSort("date", Query.SortDirection.DESCENDING);
+	    List<String> conversationList = new LinkedList<String>();
+	    Key userConversationKey = KeyFactory.createKey("user", user.getName());
+	    Query query = new Query("conversationlist", userConversationKey).addSort("date", Query.SortDirection.DESCENDING);
 	    for (Entity entity : datastore.prepare(query).asIterable()) {
-	    	String ID = (String) entity.getProperty("id");
-	    	IDList.add(ID);
+	    	String conversationId = (String) entity.getProperty("threadid");
+	    	conversationList.add(conversationId);
 	    }
-	    return IDList;
+	    return conversationList;
 	}
+
 }

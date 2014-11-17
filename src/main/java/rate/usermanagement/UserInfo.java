@@ -1,4 +1,5 @@
-package ratingapp.usermanagement;
+package rate.usermanagement;
+
 public class UserInfo {
 	String name;
 	String password;

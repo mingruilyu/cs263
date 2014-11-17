@@ -1,4 +1,4 @@
-package ratingapp.usermanagement;
+package rate.usermanagement;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,7 +25,7 @@ import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
 import com.restfb.types.User;
 
-import ratingapp.usermanagement.FacebookLoginRequest;
+import rate.usermanagement.FacebookLoginRequest;
 @Path("/facebook")
 public class FacebookServlet {
 	@Path("login")

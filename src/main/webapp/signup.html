@@ -6,6 +6,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"type="text/javascript" ></script>
 </head>
 <body>
+	<a href = "/login.jsp">go back to login!</a>
 	<form action = "/signupprocessor" method = "post" id = "info"></form>
 		<table>		
 			<tr>
@@ -62,7 +63,6 @@
 			};
 			var userJson = JSON.stringify(userObj);
 			console.log(userJson);
-			alert(typeof(userJson));
 			// AJAX code to submit form.
 			$.ajax({
 				type: 'POST',

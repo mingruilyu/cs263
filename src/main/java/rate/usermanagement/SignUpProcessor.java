@@ -1,4 +1,4 @@
-package ratingapp.usermanagement;
+package rate.usermanagement;
 
 import java.io.IOException;
 import java.io.StringReader;

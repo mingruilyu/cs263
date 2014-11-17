@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
-<%@ page import = "ratingapp.usermanagement.FacebookLoginRequest" %>
+<%@ page import = "rate.usermanagement.FacebookLoginRequest" %>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
@@ -13,7 +13,7 @@
 	<h2>1.Login to Facebook from GAERatingApp if you first sign up with Facebook</h2><br>
 	<a href = "<%=FacebookLoginRequest.getFacebookAuthURL()%>">Redirect to Facebook to login in</a>
 	<h2>2.Login locally from this website</h2>
-	<form action = "/rest/login/directlogin" method = "get" id = "form">
+	<form action = "/rest/log/directlogin" method = "get" id = "form">
 		<div><input type = "text" name = "username"/>username</div>
 		<div><input type = "password" name = "password"/>password</div>
 	</form>
@@ -28,7 +28,7 @@
 		var userForm = document.getElementById("form");
 		var username = userForm.elements[0].value;
 		var password = userForm.elements[1].value;
-		var url = "/rest/login/directlogin?username=" + username + "&password=" + password;    
+		var url = "/rest/log/directlogin?username=" + username + "&password=" + password;    
 		$(location).attr('href',url);
 		/*$.ajax({
 			type: 'get',
