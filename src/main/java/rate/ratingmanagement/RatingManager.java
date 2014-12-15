@@ -38,56 +38,61 @@ import com.google.gson.GsonBuilder;
 @Path("/rating")
 public class RatingManager {
 	public static DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-	@Context HttpServletRequest request;
-	@Path("/rated")
+	@Context HttpServletRequest request;	
+	@Path("/ratedlist")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getRated(@QueryParam("offset") String offsetstr) throws EntityNotFoundException {
+	public Response getRatedlist() throws EntityNotFoundException {
 		GsonBuilder builder = new GsonBuilder();
 	    Gson gson = builder.create();
-		int offset = Integer.valueOf(offsetstr);
-		System.out.println("rated offset = " + offset);
 		String username = (String)request.getSession().getAttribute("user");
 		Key userRatingHistoryKey = KeyFactory.createKey("user", username);
 		Query query = new Query("ratehistory", userRatingHistoryKey);
-		List<Entity> userRatingEntityList = datastore.prepare(query).asList(FetchOptions.Builder.withOffset(offset));
+		List<Entity> userRatingEntityList = datastore.prepare(query).asList(FetchOptions.Builder.withOffset(0));
 		if (userRatingEntityList.size() == 0) {
-			offset = 0;
-			// it is possible that the offset has exceeded the number of rated entity
-			// reset the offset
-			userRatingEntityList = datastore.prepare(query).asList(FetchOptions.Builder.withOffset(offset));
-			if (userRatingEntityList.size() == 0) {
-				//the user has not rated anyone
-				return Response.ok().build();
-			}
+			//the user has not rated anyone
+			return Response.ok().build();
 		}
 		// get the first entity in the list
-		Key ratedEntityKey = KeyFactory.createKey("user", userRatingEntityList.get(0).getKey().getName());
-		Entity rateeUserEntity = datastore.get(ratedEntityKey);
-		Entity rateeEntity = datastore.get(userRatingEntityList.get(0).getKey());
-		RatedUserInfo ratinginfo = new RatedUserInfo(rateeEntity.getKey().getName(), 
-													// ratee must have a valid image property
-													 (String)rateeUserEntity.getProperty("image"),
-													 (Long)rateeEntity.getProperty("rate"),
-													 ++ offset);
-		return Response.ok(gson.toJson(ratinginfo)).build();
+		List<RatedUserInfo> ratedList = new LinkedList<RatedUserInfo>();
+		for (Entity rateeEntity : userRatingEntityList) {
+			Key ratedEntityKey = KeyFactory.createKey("user", rateeEntity.getKey().getName());
+			Key rateeLocationKey = KeyFactory.createKey("loginlocation", rateeEntity.getKey().getName());
+			Key rateeRatingStatKey = new KeyFactory.Builder("user", rateeEntity.getKey().getName())
+			   										.addChild("ratestat", rateeEntity.getKey().getName())
+			   										.getKey();
+			Key raterRatingHistoryKey = new KeyFactory.Builder("user", username)
+													.addChild("ratehistory", rateeEntity.getKey().getName())
+													.getKey();
+			Entity rateeUserEntity = datastore.get(ratedEntityKey);
+			Entity rateeLocationEntity = datastore.get(rateeLocationKey);
+			Entity rateeStatEntity = datastore.get(rateeRatingStatKey);
+			Entity raterRatingEntity = datastore.get(raterRatingHistoryKey);
+			RatedUserInfo ratinginfo = new RatedUserInfo(rateeEntity.getKey().getName(), 
+					// ratee must have a valid image property
+					 (String)rateeUserEntity.getProperty("image"));
+			ratinginfo.setLatitude((Double)rateeLocationEntity.getProperty("latitude"));
+			ratinginfo.setLongitude((Double)rateeLocationEntity.getProperty("longitude"));
+			ratinginfo.setTotalRate((Long)rateeStatEntity.getProperty("rate"));
+			ratinginfo.setMyRate((Long)raterRatingEntity.getProperty("rate"));
+			ratedList.add(ratinginfo);
+		}
+		return Response.ok(gson.toJson(ratedList)).build();
 	}
 	
-	@Path("/unrated")
+	
+	@Path("/unratedlist")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getUnRated(@QueryParam("offset") String offsetstr) {
-		System.out.println("offset=" + offsetstr);
+	public Response getUnRated() throws EntityNotFoundException {
 		GsonBuilder builder = new GsonBuilder();
 	    Gson gson = builder.create();
-	    int offset;
 	    String username = (String)request.getSession().getAttribute("user");
 		// it is ensured that all user entity has the image property. if the user has not uploaded the image,
 		// the image property would be ""
 		Filter imageFilter = new FilterPredicate("image",
 											FilterOperator.NOT_EQUAL,
 											"");
-		//Filter compositeFilter = CompositeFilterOperator.and(imageFilter, nameFilter);
 		Query query = new Query("user").setFilter(imageFilter);
 		List<Entity> userEntityList = datastore.prepare(query).asList(FetchOptions.Builder.withOffset(0));
 		// no user has put their picture to be rated
@@ -96,12 +101,12 @@ public class RatingManager {
 		Key userRatingHistoryKey = KeyFactory.createKey("user", username);
 		Query ratelistquery = new Query("ratehistory", userRatingHistoryKey);
 		List<Entity> userRateEntityList = datastore.prepare(ratelistquery).asList(FetchOptions.Builder.withOffset(0));
-		System.out.println("userRateentityList size = " + userRateEntityList.size());
 		List<Entity> unratedEntityList = new LinkedList<Entity>();
 		// the first pass check how many entities that has not been rated
 		boolean flag;
 		for(Entity userEntity : userEntityList) {
 			flag = false;
+			// check if the user is in the ratedlist of the session user
 			for (Entity ratedEntity : userRateEntityList) {
 				if (ratedEntity.getKey().getName().compareTo(userEntity.getKey().getName()) == 0) {
 					// means the user has rated the person
@@ -109,23 +114,26 @@ public class RatingManager {
 					break;
 				}
 			}
-			// it is the user itself
-			if (flag == false && userEntity.getKey().getName().compareTo(username) != 0) {
+			// if the user is not in the ratedlist & it is not the session user himself,
+			// this is possible because that user himself would not be in the ratedlist
+			if (flag == false && userEntity.getKey().getName().compareTo(username) != 0)
 				unratedEntityList.add(userEntity);
-				System.out.println("sessoin user = " + username);
-				System.out.println("userEntity name = " + userEntity.getKey().getName());
-			}
 		}
-		System.out.println("userentity = " + unratedEntityList.size());
-		if (!unratedEntityList.isEmpty()) {
-			offset = Integer.parseInt(offsetstr) % unratedEntityList.size();
-			Entity selectedEntity = unratedEntityList.get(offset);
-			UnratedUserInfo ratinginfo = new UnratedUserInfo(selectedEntity.getKey().getName(), 
-														 	(String)selectedEntity.getProperty("image"),
-														 	offset + 1);
-			return Response.ok(gson.toJson(ratinginfo)).build();		
+		List<UnratedUserInfo> unratedUserInfoList = new LinkedList<UnratedUserInfo>();
+		for (Entity rateeEntity : unratedEntityList) {
+			// get the unrated ratee's location
+			Key rateeLocationKey = KeyFactory.createKey("loginlocation", rateeEntity.getKey().getName());
+			Entity rateeLocationEntity = datastore.get(rateeLocationKey);
+			UnratedUserInfo unratedUserInfo = new UnratedUserInfo(rateeEntity.getKey().getName(), 
+				 											(String)rateeEntity.getProperty("image"));
+			unratedUserInfo.setLatitude((Double)rateeLocationEntity.getProperty("latitude"));
+			unratedUserInfo.setLongitude((Double)rateeLocationEntity.getProperty("longitude"));
+			unratedUserInfoList.add(unratedUserInfo);
 		}
-		else return Response.ok().build();
+		if (unratedUserInfoList.isEmpty()) 
+			return Response.ok().build();
+		else 
+			return Response.ok(gson.toJson(unratedUserInfoList)).build();
 	}
 	
 	@Path("/addrate")
@@ -137,7 +145,6 @@ public class RatingManager {
 	    Rate rate = gson.fromJson(jsonrate, Rate.class);
 
 	    // add to the rater's rate history
-	    System.out.println("rater = " + rate.rater);
 		Key raterKey = KeyFactory.createKey("user", rate.rater);
 		Entity rateHistoryEntity = new Entity("ratehistory", rate.ratee, raterKey);
 		rateHistoryEntity.setProperty("rate", rate.rate);
@@ -145,7 +152,6 @@ public class RatingManager {
 		datastore.put(rateHistoryEntity);
 		
 		//Update the rate statistics
-		System.out.println("ratee = " + rate.ratee);
 		Key rateeRatingStatKey = new KeyFactory.Builder("user", rate.ratee)
 											   .addChild("ratestat", rate.ratee)
 											   .getKey();

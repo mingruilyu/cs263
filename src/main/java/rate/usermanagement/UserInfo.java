@@ -4,29 +4,57 @@ public class UserInfo {
 	String name;
 	String password;
 	boolean gender; // true = male
-	String location;
 	String email;
 	String birthdate;
 	long rate; 
 	String image; // profile image URL
+	String hobby;
+	String club;
+	String motto;
+	String school;
+	String occupation;
 	
+	public String getOccupation() {
+		return occupation;
+	}
+	public void setOccupation(String occupation) {
+		this.occupation = occupation;
+	}
+	public String getHobby() {
+		return hobby;
+	}
+	public void setHobby(String hobby) {
+		this.hobby = hobby;
+	}
+	public String getClub() {
+		return club;
+	}
+	public void setClub(String club) {
+		this.club = club;
+	}
+	public String getMotto() {
+		return motto;
+	}
+	public void setMotto(String motto) {
+		this.motto = motto;
+	}
+	public String getSchool() {
+		return school;
+	}
+	public void setSchool(String school) {
+		this.school = school;
+	}
 	public void setGender(boolean gender) {
 		this.gender = gender;
 		return;
 	}
 	public String getGender() { 
-		return this.gender ? "male" : "female";
+		return this.gender ? "female" : "male";
 	}
 	public boolean getBooleanGender() {
 		return this.gender;
 	}
-	public void setLocation(String location) {
-		this.location = location;
-		return;
-	}
-	public String getLocation() {
-		return this.location;
-	}
+
 	public void setBirthDate(String birthdate) {
 		this.birthdate = birthdate;
 		return;
@@ -66,7 +94,10 @@ public class UserInfo {
 		this.image = url;
 	}
 	public String getProfileImage() {
-		return image;
+		if (image == "") {
+			return "http://blogdailyherald.com/wp-content/uploads/2014/10/wallpaper-for-facebook-profile-photo.jpg";
+		}
+		else return image;
 	}
 	
 }

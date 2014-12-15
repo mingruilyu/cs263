@@ -29,9 +29,18 @@ import com.google.gson.stream.JsonReader;
 @Path("/conversation")
 public class ConversationManager {
 	public static DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-	final static long HIGH_SCORE = 90;
+	final static long HIGH_SCORE = 80;
 	final static int TOKEN_LENGTH = 10;
 	@Context HttpServletRequest request;
+	
+	public static String getSender(String token, String receiver) throws EntityNotFoundException {
+		Key tokenKey = KeyFactory.createKey("conversationthread", token);
+		Entity conversationEntity = datastore.get(tokenKey);
+		String talker1 = (String)conversationEntity.getProperty("talker1");
+		String talker2 = (String)conversationEntity.getProperty("talker2");
+		if (receiver.equals(talker1)) return talker2;
+		else return talker1;
+	}
 	
 	@GET
 	@Path("/add/{token}")
@@ -59,19 +68,19 @@ public class ConversationManager {
 		datastore.put(talker2ConversationListEntity);
 		
 		//send system warning message to each other 
-		String systemWarning = "You can start talking with me!";
+		String systemWarning = "You can start talking with ";
 		Key conversationThreadKey = KeyFactory.createKey("threadid", token);
 		Entity message1Entity = new Entity("conversation", conversationThreadKey);
-		message1Entity.setProperty("sender", talker1);
+		message1Entity.setProperty("sender", "admin");
 		message1Entity.setProperty("receiver", talker2);
 		message1Entity.setProperty("date", new Date());
-		message1Entity.setProperty("content", systemWarning);
+		message1Entity.setProperty("content", systemWarning + talker1);
 		
 		Entity message2Entity = new Entity("conversation", conversationThreadKey);
-		message2Entity.setProperty("sender", talker2);
+		message2Entity.setProperty("sender", "admin");
 		message2Entity.setProperty("receiver", talker1);
 		message2Entity.setProperty("date", new Date());
-		message2Entity.setProperty("content", systemWarning);
+		message2Entity.setProperty("content", systemWarning + talker2);
 		
 		datastore.put(message1Entity);
 		datastore.put(message2Entity);
@@ -108,10 +117,9 @@ public class ConversationManager {
 			// the ratee should get the activation email
 			Entity rateeHistoryEntity = datastore.get(rateeHistoryKey);
 			long rateerate = (Long)rateeHistoryEntity.getProperty("rate");
-			if (rateerate > HIGH_SCORE && rate > HIGH_SCORE) {	// we found a match
+			if (rateerate >= HIGH_SCORE && rate >= HIGH_SCORE) {	// we found a match
 				// Generated conversation token, add to the conversationthread
 				String conversationToken = generateConversationToken();
-				System.out.println("conversationToken: " + conversationToken);
 				Entity conversationThreadEntity = new Entity("conversationthread", conversationToken);
 				conversationThreadEntity.setProperty("activated", false);
 				conversationThreadEntity.setProperty("talker1", rater);
@@ -138,28 +146,38 @@ public class ConversationManager {
 	@Path("/send/{token}")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response sendMessage(String jsonstring, @PathParam("token") String conversationToken) throws IOException{
+	public Response sendMessage(String jsonstring, @PathParam("token") String conversationToken) 
+			throws IOException, EntityNotFoundException{
 		Key conversationThreadKey = KeyFactory.createKey("threadid", conversationToken);
 		Entity newMessageEntity = new Entity("conversation", conversationThreadKey);
 		
-		
+		// get the json message
 		JsonReader reader = new JsonReader(new StringReader(jsonstring));
 		reader.beginObject();
 		String nametoken;
 		while (reader.hasNext()) {
 			nametoken = reader.nextName();
-			if (nametoken.compareTo("sender") == 0)
-				newMessageEntity.setProperty("sender", reader.nextString());
-			else if (nametoken.compareTo("receiver") == 0)
-				newMessageEntity.setProperty("receiver", reader.nextString());
-			else if (nametoken.compareTo("content") == 0)
+			if (nametoken.compareTo("content") == 0)
 				newMessageEntity.setProperty("content", reader.nextString());
 			else reader.nextString();
 		}
 	    reader.close();
+	    
+	    // get the receiver and sender
+		Key conversationKey = KeyFactory.createKey("conversationthread", conversationToken);
+		Entity conversationEntity = datastore.get(conversationKey);
+		String talker1 = (String) conversationEntity.getProperty("talker1");
+		String talker2 = (String) conversationEntity.getProperty("talker2");
+		String sender = (String)request.getSession().getAttribute("user");
+		String receiver;
+		if (sender.equals(talker1))
+			receiver = talker2;
+		else receiver = talker1;
+		newMessageEntity.setProperty("sender", sender);
+		newMessageEntity.setProperty("receiver", receiver);
 	    newMessageEntity.setProperty("date", new Date());
 	    datastore.put(newMessageEntity);
+	    
 	    return Response.seeOther(URI.create("/conversation.jsp?id=" + conversationToken)).build();
 	}
-	
 }

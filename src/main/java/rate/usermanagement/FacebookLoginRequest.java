@@ -17,8 +17,9 @@ public class FacebookLoginRequest {
 	static String appid = "732083976882116";
 	static String appsecret = "eacc38539438a41c127ec7e1c6662994";
 	static String authUrl = "https://www.facebook.com/dialog/oauth";
-	//static String redirectUrl = "http://lyumingrui1.appspot.com/logindispatch.jsp";
-	static String redirectUrl = "http://lyumingrui1.appspot.com/rest/facebook/login";
+	//static String redirectUrl = "http://localhost:8080/welcome.jsp";
+	//static String redirectUrl = "http://lyumingrui1.appspot.com/rest/facebook/login";
+	static String redirectUrl = "http://localhost:8080/rest/facebook/login";
 	static String tokenUrl = "https://graph.facebook.com/oauth/access_token";
 	static String permission = "email,user_friends,user_birthday,user_hometown";
 	static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();	

@@ -32,35 +32,98 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.gson.stream.JsonReader;
 
 public class UserManager {
 	public UserInfo user = null;
 	static public DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	static MemcacheService memCache = MemcacheServiceFactory.getMemcacheService();
 	public UserManager(Entity userEntity) throws EntityNotFoundException {
 			this.user = new UserInfo();
 			if (userEntity.getProperty("gender") == null)
 				System.out.println("null");
-			//this.user.setGender();
 			this.user.setName((String)userEntity.getKey().getName());
-			this.user.setLocation((String)userEntity.getProperty("location"));
-			this.user.setEmail((String)userEntity.getProperty("email"));
-			this.user.setBirthDate((String)userEntity.getProperty("birthdate"));
-			//if (userEntity.getProperty("image") != null)
-			this.user.setProfileImage((String)userEntity.getProperty("image"));
-			//this.user.setRatingPermission(((Boolean)userEntity.getProperty("ratingpermission")).booleanValue());
+
+			String username = userEntity.getKey().getName();
+				this.user.setEmail((String)userEntity.getProperty("email"));
+				memCache.put(username + "email", (String)userEntity.getProperty("email"));
+				this.user.setBirthDate((String)userEntity.getProperty("birthdate"));
+				memCache.put(username + "birthdate", (String)userEntity.getProperty("birthdate"));
+				this.user.setProfileImage((String)userEntity.getProperty("image"));
+				memCache.put(username + "image", (String)userEntity.getProperty("image"));
+				this.user.setHobby((String)userEntity.getProperty("hobby"));
+				memCache.put(username + "hobby", (String)userEntity.getProperty("hobby"));
+				this.user.setClub((String)userEntity.getProperty("club"));
+				memCache.put(username + "club", (String)userEntity.getProperty("club"));
+				this.user.setOccupation((String)userEntity.getProperty("occupation"));
+				memCache.put(username + "occupation", (String)userEntity.getProperty("occupation"));
+				this.user.setMotto((String)userEntity.getProperty("motto"));
+				memCache.put(username + "motto", (String)userEntity.getProperty("motto"));
+				this.user.setSchool((String)userEntity.getProperty("school"));
+				memCache.put(username + "school", (String)userEntity.getProperty("school"));
 			// get the rate information from the datastore
-			//Key rateKey = KeyFactory.createKey("ratestat", this.user.getName());
 			Key rateKey = new KeyFactory.Builder("user", this.user.getName())
 										.addChild("ratestat", this.user.getName()).getKey();
 			Entity rateStatEntity = datastore.get(rateKey);
 			this.user.setRate((Long)rateStatEntity.getProperty("rate"));
+			memCache.put(username + "rate", (Long)rateStatEntity.getProperty("rate"));
 	}
 	
 	public static UserManager getUserHandler(String username) throws EntityNotFoundException{
 		Key userKey = KeyFactory.createKey("user", username);
 		Entity userEntity = datastore.get(userKey);
+		// deposit the logged in user info to the mem cache
+		memCache.put(username + "gender", (Boolean)userEntity.getProperty("gender"));
 		return new UserManager(userEntity);
+	}
+	
+	public static boolean infoCompletionCheck(UserInfo user) {
+		// true if everything is completed
+		return (user.getBirthDate() != null && user.getClub() != null
+				&& user.getEmail() != null && user.getMotto() != null
+				&& user.getOccupation() != null && user.getProfileImage() != null
+				&& user.getSchool() != null);
+	}
+	
+	public static UserInfo getCachedUserInfo(String username) throws EntityNotFoundException {
+		UserInfo user = new UserInfo();
+		user.setName(username);
+		String location, email, image, birthdate, school, motto, club, hobby, occupation;
+		Boolean gender;
+		Long rate;
+		if((gender = (Boolean)memCache.get(username + "gender") != null))
+			user.setGender(gender);
+		else return getUserHandler(username).user;
+		if((email = (String)memCache.get(username + "email")) != null)
+			user.setEmail(email);
+		//else return getUserHandler(username).user;
+		if ((image = (String)memCache.get(username + "image")) != null)
+			user.setProfileImage(image);
+		//else return getUserHandler(username).user;
+		if ((rate = (Long)memCache.get(username + "rate")) != null)
+			user.setRate((Long)rate);
+		//else return getUserHandler(username).user;
+		if ((birthdate = (String)memCache.get(username + "birthdate")) != null)
+			user.setBirthDate(birthdate);
+		//else return getUserHandler(username).user;
+		if ((club = (String)memCache.get(username + "club")) != null)
+			user.setClub(club);
+		//else return getUserHandler(username).user;
+		if ((hobby = (String)memCache.get(username + "hobby")) != null)
+			user.setHobby(hobby);
+		//else return getUserHandler(username).user;
+		if ((occupation = (String)memCache.get(username + "occupation")) != null)
+			user.setOccupation(occupation);
+		//else return getUserHandler(username).user;
+		if ((motto = (String)memCache.get(username + "motto")) != null)
+			user.setMotto(motto);
+		//else return getUserHandler(username).user;
+		if ((school = (String)memCache.get(username + "school")) != null)
+			user.setSchool(school);
+		//else return getUserHandler(username).user;
+		return user;
 	}
 	
 	public static boolean registerUser(Map<String, String> attrMap) {
@@ -105,10 +168,10 @@ public class UserManager {
 		return true;
 	}
 	
-	public List<String> getConversationList() {
+	public static List<String> getConversationList(String user) {
 		// return conversation ID
 	    List<String> conversationList = new LinkedList<String>();
-	    Key userConversationKey = KeyFactory.createKey("user", user.getName());
+	    Key userConversationKey = KeyFactory.createKey("user", user);
 	    Query query = new Query("conversationlist", userConversationKey).addSort("date", Query.SortDirection.DESCENDING);
 	    for (Entity entity : datastore.prepare(query).asIterable()) {
 	    	String conversationId = (String) entity.getProperty("threadid");
@@ -116,5 +179,8 @@ public class UserManager {
 	    }
 	    return conversationList;
 	}
-
+	
+	public static String getLocation(String username) throws EntityNotFoundException {
+		return (String)memCache.get(username + "city");
+	}
 }

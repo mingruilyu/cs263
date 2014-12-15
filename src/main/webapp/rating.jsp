@@ -7,21 +7,19 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Insert title here</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"type="text/javascript" ></script>
+<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDY0kkJiTPVd2U7aTOAwhc9ySH6oHxOIYM&sensor=false"></script>
+<script src="http://www.google.com/jsapi"></script>
 </head>
 <body>
 <%String username = (String)pageContext.getSession().getAttribute("user");
 if (username != null) {
 	UserManager usermanager = UserManager.getUserHandler(username);%>
-	<a href = "/welcome.jsp">go back to home</a>
+	<a href = "/welcome.jsp">go back to home</a><br>
 	<a href = "/rest/log/logout">sign out</a><br>
 	<a id = "switchlink"></a><br>
-	<img id = "image">
-	<p id = "name"></p>
-	<p id = "rate"></p>
-	<p id = "displayrate">you need to rate before you can see the rate for the user!</p>
-	<input id = "rateselect" type = "number" name = "rate" min = "0" max = "100" step = "5" value = "50">
-	<button id ="submitrate">rate</button>
-	<button id ="next">next</button>
+	<p id = "displayrate"></p>
+	<div id = "ratedlist"></div>
+	<div id="googleMap" style="width:1200px;height:1200px;"></div>	
 <% } else {%>
 <a href = "/login.jsp">sign in</a><br>
 <%	}
@@ -39,117 +37,120 @@ if (username != null) {
 	}
 	$(document).ready(loadInfo);
 	var view = parseInt($.urlParam("view"));
-	var offset = 0;
 	var ratee;
-	getNext();
+
+	function printList(list){
+		var print = "<h2>People I have rated<h2>";
+		print += '<div>';
+		for (i = 0; i < list.length; i ++) {
+			print += '<p>' + list[i].name + '</p>';
+			print += '<p>My rate: ' + list[i].myrate + '</p>';
+			print += '<p>Overall rate: ' + list[i].totalrate + '</p>';
+			print += '<img src = ' + list[i].image + ' height = 200 width = 200>' + '<br>';
+		}
+		print += '</div>';
+		$("#ratedlist").append(print);
+	}
 	
 	function loadInfo() {
 		if (view == 0)  {
+			getUnratedList();
 			$("#switchlink").text("see the people I have rated");
 			$("#switchlink").attr("href", "/rating.jsp?view=1");
-			$("#submitrate").click(submitRate);
 		}
 		else {
+			getRatedList();
 			$("#switchlink").text("see the people I have not rated");
 			$("#switchlink").attr("href", "/rating.jsp?view=0");
-			$("#submitrate").hide();
-			$("#rateselect").hide();
-			$("#rate").hide();
-			$("#displayrate").hide();
 		}
-		// events
-		$("#next").click(getNext);
-	}
-	
-	function submitRate() {
-		var rateObj = {
-			rater : "<%= (String)session.getAttribute("user") %>",
-			ratee : $("#name").text(),
-			rate  : $("#rateselect").attr("value")
-		};
-		$.ajax({
-			type: 'POST',
-			url: '/rating/rating/addrate',
-			data: JSON.stringify(rateObj),
-			async: false,
-			contentType: "application/json",
-			//dataType: "json",
-			success: function(result) {
-				alert("the average rate of this person is " + result);
-				$("#rate").text(result.rate);
-				$("#rate").show();
-			},
-			error: function (response) {
-				alert("fail");
-			}
-		});
-	}
-	
-	function getNext() {
-		// AJAX code to submit form.
-		console.log(offset);
-		if (view == 0) getNextUnrated();
-		else getNextRated();
-	}
-	
-	function getNextRated(){
-		$.ajax({
-			type: 'GET',
-			url: '/rating/rating/rated',
-			data: "offset=" + offset,
-			async: false,
-			//dataType: "json",
-			dataType: 'json',
-			success: function(result) {
-				//console.log(result.name);
-				console.log(result);
-				ratee = result.name;
-				$("#image").attr("src", result.image);
-				$("#name").text(result.name);
-				$("#rate").text(result.rate);
-				offset = parseInt(result.offset);
-				console.log("offset =" + result);
-			},
-			error: function (response) {
-				alert("fail");
-			}
-		});
 	}
 
-	function getNextUnrated(){
-		console.log(offset);
+	function initializeUnratedMap(list) {
+		console.log(list);
+		var bounds = new google.maps.LatLngBounds();
+		var currentlatitude = google.loader.ClientLocation.latitude;
+		var currentlongitude = google.loader.ClientLocation.longitude;
+		
+		var myCenter = new google.maps.LatLng(currentlatitude, currentlongitude);
+		var mapProp = {
+		  center:myCenter,
+		  zoom:1,
+		  mapTypeId:google.maps.MapTypeId.ROADMAP
+		  };
+
+		var map = new google.maps.Map(document.getElementById("googleMap"),mapProp);
+		// place the user's own marker
+		var marker;
+		var myMarkerCenter=new google.maps.LatLng(currentlatitude, currentlongitude);
+		marker = new google.maps.Marker({
+				  position: myMarkerCenter,
+				  map: map,
+				  animation: google.maps.Animation.DROP
+				  });
+		marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+		
+		var i;
+		
+		for (i = 0; i < list.length; i ++) {
+			var markerCenter=new google.maps.LatLng(list[i].location.latitude, list[i].location.longitude);
+			bounds.extend(markerCenter);
+			marker = new google.maps.Marker({
+				  position: markerCenter,
+				  map: map,
+				  animation: google.maps.Animation.BOUNCE
+				  });
+			
+			google.maps.event.addListener(marker, 'click', (function(marker, i) {
+				var rateInfo = "<p>" + list[i].name + "</p>" + 
+							"<img src = '" + list[i].image + "' height = '100' width = '100'><br>" +
+							"<a href = " + "/torate.jsp?ratee=" + list[i].name + ">go to rate him / her</a>";
+	            return function() {
+	            	var infoWindow = new google.maps.InfoWindow({
+	            		content: rateInfo,
+	            		maxWidth: 200
+	            	});
+	                infoWindow.open(map, marker);
+	            }
+	        })(marker, i));
+			map.fitBounds(bounds);
+		}
+	}
+	
+	function getRatedList(){
 		$.ajax({
 			type: 'GET',
-			url: '/rating/rating/unrated',
-			data: "offset=" + offset,
+			url: '/rating/rating/ratedlist',
 			async: false,
 			dataType: 'json',
 			success: function(result) {
-				if (result == null) {
-					$("#displayrate").text("you have rated all the users!");
-					$("#rateselect").hide();
-					$("#image").hide();
-					$("#name").hide();
-					$("#rate").hide();
-					$("#submitrate").hide();
-					$("#next").hide();
-				}					
+				if (result == null)	
+					$("#displayrate").text("you have not rated anyone!");
 				else {
-					console.log(result.name);
-					offset = parseInt(result.offset);
-					$("#image").attr("src", result.image);
-					$("#name").text(result.name);
-					$("#submitrate").show();
-					$("#rateselect").show();
-					$("#rate").show();
-					$("#displayrate").show();
-				}				
+					printList(result);
+				}
 			},
 			error: function (response) {
 				alert("fail");
 			}
 		});
-
+	}
+	function getUnratedList(){
+		$.ajax({
+			type: 'GET',
+			url: '/rating/rating/unratedlist',
+			async: false,
+			dataType: 'json',
+			success: function(result) {
+				if (result == null)	
+					$("#displayrate").text("you have rated all people!");
+				else {
+					initializeUnratedMap(result);
+				}
+			},
+			error: function (response) {
+				alert("fail");
+			}
+		});
 	}
 	</script>
 </body>

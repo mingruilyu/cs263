@@ -20,7 +20,7 @@ public class UploadServlet extends HttpServlet {
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		Map<String, BlobKey> blobs = blobstore.getUploadedBlobs(request);
         BlobKey blobKey = blobs.get("image");
-        response.sendRedirect("/update.jsp?blobkey=" + blobKey.getKeyString());
+        response.sendRedirect(request.getHeader("Referer") + "?blobkey=" + blobKey.getKeyString());
 	}
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {

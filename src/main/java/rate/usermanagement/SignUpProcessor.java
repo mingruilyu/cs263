@@ -46,8 +46,8 @@ public class SignUpProcessor {
 		UserInfo user = new UserInfo();
 		parseJson(jsonstring, user);
 		if (addUser(user))
-			return Response.ok("created", MediaType.TEXT_PLAIN).status(201).build();
-		return Response.ok("exist", MediaType.TEXT_PLAIN).status(210).build();
+			return Response.ok("1", MediaType.TEXT_PLAIN).status(201).build();
+		return Response.ok("2", MediaType.TEXT_PLAIN).status(210).build();
 	}
 	
 	
@@ -65,14 +65,12 @@ public class SignUpProcessor {
 			else if (nametoken.compareTo("email") == 0)
 				user.setEmail(reader.nextString());
 			else if (nametoken.compareTo("gender") == 0) {
-				if (reader.nextString() == "male")
+				if (reader.nextString().equals("male"))
 					user.setGender(false);
 				else user.setGender(true);
 				}
 			else if (nametoken.compareTo("birthdate") == 0)
 				user.setBirthDate(reader.nextString());
-			else if (nametoken.compareTo("location") == 0)
-				user.setLocation(reader.nextString());
 			else reader.nextString();
 		}
 	    reader.close();
@@ -90,7 +88,6 @@ public class SignUpProcessor {
 			attrMap.put("email", user.getEmail());
 			attrMap.put("birthdate", user.getBirthDate());
 			attrMap.put("gender", user.getGender());
-			attrMap.put("location", user.getLocation());
 			attrMap.put("password", user.getPassword());
 			attrMap.put("image", "");
 			if (UserManager.registerUser(attrMap)) return true;

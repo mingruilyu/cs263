@@ -23,13 +23,13 @@ public class Messenger {
 		Properties props = new Properties();
 		Session session = Session.getDefaultInstance(props, null);
 		String receiver = request.getParameter("receiver");
-		//String email = request.getParameter("email");
-		String email = "davidlvmingrui@gmail.com";
+		String email = request.getParameter("email");
+		//String email = "davidlvmingrui@gmail.com";
 		String msgBody = "Hello," + receiver + "\n"
 					   + "You just got someone who is interested in you!\n"
 					   + "Start rating to find out who is that!"; 
 		Message msg = new MimeMessage(session);
-		msg.setFrom(new InternetAddress("davidlvmingrui@gmail.com", "RatingApp"));
+		msg.setFrom(new InternetAddress("davidlvmingrui@gmail.com", "LET'S DATE"));
 		msg.addRecipient(Message.RecipientType.TO,
 						 new InternetAddress(email, receiver));
 		msg.setSubject("ATTENTION! SOMEONE IS WATCHING YOU!");
@@ -43,15 +43,15 @@ public class Messenger {
 		Properties props = new Properties();
 		Session session = Session.getDefaultInstance(props, null);
 		String receiver = request.getParameter("receiver");
-		//String email = request.getParameter("email");
-		String email = "davidlvmingrui@gmail.com";
+		String email = request.getParameter("email");
+		//String email = "davidlvmingrui@gmail.com";
 		String token = request.getParameter("token");
 		String msgBody = "Hello," + receiver + "\n"
 					   + "You just got someone who is also interested in you!\n"
 					   + "copy the following link to start the conversation!" 
 					   + ADD_CONVERSATION_LINK + "/" + token;
 		Message msg = new MimeMessage(session);
-		msg.setFrom(new InternetAddress("davidlvmingrui@gmail.com", "RatingApp"));
+		msg.setFrom(new InternetAddress("davidlvmingrui@gmail.com", "LET'S DATE"));
 		msg.addRecipient(Message.RecipientType.TO,
 						 new InternetAddress(email, receiver));
 		msg.setSubject("ATTENTION! YOU HAVE GOT A MATCH!");

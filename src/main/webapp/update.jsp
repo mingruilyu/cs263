@@ -40,12 +40,27 @@
 			<td><input type = "text" name = "birthdate" form = "info" value = "<%= usermanager.user.getBirthDate()%>"/></td>
 		</tr>
 		<tr>
-			<td>current location</td>
-			<td><input type = "text" name = "location" form = "info" value = "<%= usermanager.user.getLocation()%>"/></td>
+			<td>Hobby</td>
+			<td><input type = "text" name = "hobby" form = "info" value = "<%= usermanager.user.getHobby()%>"></td>
 		</tr>
-			<tr>
+		<tr>
+			<td>Club</td>
+			<td><input type = "text" name = "club" form = "info" value = "<%= usermanager.user.getClub()%>"></td>
+		</tr>
+		<tr>
+			<td>School</td>
+			<td><input type = "text" name = "school" form = "info" value = "<%= usermanager.user.getSchool()%>"></td>
+		</tr>
+		<tr>
+			<td>Occupation</td>
+			<td><input type = "text" name = "occupation" form = "info" value = "<%= usermanager.user.getOccupation()%>"></td>
+		</tr>
+		<tr>
+			<td>Motto</td>
+			<td><input type = "text" name = "motto" form = "info" value = "<%= usermanager.user.getMotto()%>"></td>
+		</tr>
 		</table>
-			<button id = "update">update</button>
+		<button id = "update">update</button>
 <% } else {%>
 <a href = "/login.jsp">sign in</a><br>
 <%	}
@@ -71,14 +86,22 @@
 					userObj = {
 							email : userform.elements[1].value,
 							birthdate : userform.elements[2].value,
-							location : userform.elements[3].value
+							hobby : userform.elements[3].value,
+							club : userform.elements[4].value,
+							school : userform.elements[5].value,
+							occupation : userform.elements[6].value,
+							motto : userform.elements[7].value
 						};
 				}else {
 					userObj = {
 						image : userform.elements[0].value,
 						email : userform.elements[1].value,
 						birthdate : userform.elements[2].value,
-						location : userform.elements[3].value
+						hobby : userform.elements[3].value,
+						club : userform.elements[4].value,
+						school : userform.elements[5].value,
+						occupation : userform.elements[6].value,
+						motto : userform.elements[7].value
 					};
 				}
 				var userJson = JSON.stringify(userObj);
@@ -89,13 +112,12 @@
 					url: '/rest/update',
 					data: userJson,
 					async: false,
-					//dataType: "json",
 					contentType: 'application/json',
 					success: function(result) {
-						alert("update succeed");
+						alert("Update personal information succeeded!");
 					},
 					error: function (response) {
-						alert("fail");
+						alert("Update personal information failed!");
 					}
 				});
 			}

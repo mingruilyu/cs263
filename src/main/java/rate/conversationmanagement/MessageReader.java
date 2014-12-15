@@ -18,7 +18,7 @@ public class MessageReader {
 		public static List<Message> getMessageList(String conversationId) { 
 			List<Message> messageList = new LinkedList<Message>();
 			Key conversationThreadKey = KeyFactory.createKey("threadid", conversationId);
-		    Query query = new Query("conversation", conversationThreadKey).addSort("date", Query.SortDirection.DESCENDING);
+		    Query query = new Query("conversation", conversationThreadKey).addSort("date", Query.SortDirection.ASCENDING);
 		    for (Iterator<Entity> iterator = datastore.prepare(query).asIterator(); iterator.hasNext(); ) {
 		    	Entity entity = iterator.next();
 		    	Message message = new Message();

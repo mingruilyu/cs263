@@ -42,7 +42,7 @@ public class FacebookServlet {
 			UserManager.datastore.get(userKey);
 		} catch(EntityNotFoundException ex) {
 			Map<String, String> attrMap = new HashMap<String, String>();
-			attrMap.put("username", thisuser.getName());
+			attrMap.put("username", thisuser.getName().replaceAll("\\s",""));
 			attrMap.put("email", thisuser.getEmail());
 			attrMap.put("birthdate", thisuser.getBirthday());
 			attrMap.put("gender", thisuser.getGender());
@@ -50,6 +50,6 @@ public class FacebookServlet {
 			if (!UserManager.registerUser(attrMap))
 				return Response.seeOther(URI.create("/error.html")).build();
 		}
-		return LogProcessor.facebookLogin(request, thisuser.getName());
+		return LogProcessor.facebookLogin(request, thisuser.getName().replaceAll("\\s",""));
 	}
 }
