@@ -11,7 +11,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -25,8 +24,6 @@ import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.CompositeFilter;
-import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
@@ -34,14 +31,38 @@ import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+/**
+ * This class handles all rating operations
+ * @author david
+ * @version Mingrui Lyu
+ */
 @Path("/rating")
-public class RatingManager {
+public class RatingManager {	
+	/**
+	 * this static field refers to the GAE datastore low-level api
+	 */
 	public static DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	@Context HttpServletRequest request;	
 	@Path("/ratedlist")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
+	/**
+	 * This method is a REST GET API. It gets the whole list of people that have 
+	 * been rated by the current user. In order to get the list of rated people,
+	 * Four tables are queried:
+	 * 1.	the "ratehistory" table to get the user's rating history,
+	 * 2.	the "loginlocation" table to get the ratee's city,
+	 * 3.	the "ratestat" table to get the ratee's overall rate,
+	 * 4.	the "user" table to get the ratee's profile image
+	 * The list of rated people is obtained by querying the current user's rating
+	 * history. For each of the ratee in the rating history, create a RatedUserInfo
+	 * object and fill in the corresponding fields with the information returned from
+	 * query of the corresponding tables.
+	 * @return A Json object list is returned that marshalling a linked list of RatedUserInfo
+	 * objects.
+	 * @throws EntityNotFoundException if the keys are not found in the corresponding
+	 * table.
+	 */
 	public Response getRatedlist() throws EntityNotFoundException {
 		GsonBuilder builder = new GsonBuilder();
 	    Gson gson = builder.create();
@@ -71,8 +92,9 @@ public class RatingManager {
 			RatedUserInfo ratinginfo = new RatedUserInfo(rateeEntity.getKey().getName(), 
 					// ratee must have a valid image property
 					 (String)rateeUserEntity.getProperty("image"));
-			ratinginfo.setLatitude((Double)rateeLocationEntity.getProperty("latitude"));
-			ratinginfo.setLongitude((Double)rateeLocationEntity.getProperty("longitude"));
+			//ratinginfo.setLatitude((Double)rateeLocationEntity.getProperty("latitude"));
+			//ratinginfo.setLongitude((Double)rateeLocationEntity.getProperty("longitude"));
+			ratinginfo.setCity((String)rateeLocationEntity.getProperty("city"));
 			ratinginfo.setTotalRate((Long)rateeStatEntity.getProperty("rate"));
 			ratinginfo.setMyRate((Long)raterRatingEntity.getProperty("rate"));
 			ratedList.add(ratinginfo);
@@ -80,7 +102,19 @@ public class RatingManager {
 		return Response.ok(gson.toJson(ratedList)).build();
 	}
 	
-	
+	/**
+	 * This method is a REST GET API. It gets the list of unrated people for the user.
+	 * Similar to getRatedList() method, the three tables are also needed to get the 
+	 * same information. First, a filtered query is applied to the "user" table to get
+	 * all the users that have a profile picture. For each of such user, check it against
+	 * the current user's rating history. If the user is not contained in the raing history,
+	 * add it to the unrated list. Also query the "loginlocation" to fill in the corresponding
+	 * field of UnratedUserList.
+	 * 
+	 * @return A Json object list is returned that marshalling a linked list of UnratedUserInfo objects.
+	 * @throws EntityNotFoundException if the keys are not found in the corresponding
+	 * table.
+	 */
 	@Path("/unratedlist")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -108,7 +142,7 @@ public class RatingManager {
 			flag = false;
 			// check if the user is in the ratedlist of the session user
 			for (Entity ratedEntity : userRateEntityList) {
-				if (ratedEntity.getKey().getName().compareTo(userEntity.getKey().getName()) == 0) {
+				if (ratedEntity.getKey().getName().equals(userEntity.getKey().getName())) {
 					// means the user has rated the person
 					flag = true;
 					break;
@@ -135,7 +169,19 @@ public class RatingManager {
 		else 
 			return Response.ok(gson.toJson(unratedUserInfoList)).build();
 	}
-	
+	/**
+	 * This method is a REST POST API. It adds a new rating event(Rate object) 
+	 * of the current user to the "ratehistory" table. It then updates the 
+	 * rating statistics of the ratee by taking a new average of the rates.
+	 * After that, it initializes a new check on the rate by adding a check
+	 * routine to the task queue that runs in background. The check routine
+	 * checks whether the rate is higher than the a score threshold(80 / 100).
+	 * If it does, further work will be done by the background tasks.
+	 * @param jsonrate the marshalled Json Rate object
+	 * @return the new average of overall rate over the ratee
+	 * @throws EntityNotFoundException if the keys are not found in the corresponding
+	 * table.
+	 */
 	@Path("/addrate")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)

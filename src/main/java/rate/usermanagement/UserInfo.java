@@ -1,6 +1,11 @@
 package rate.usermanagement;
-
+/**
+ * This class contains all the personal information of a user
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 public class UserInfo {
+	public final static String DEFAULT_IMAGE = "http://blogdailyherald.com/wp-content/uploads/2014/10/wallpaper-for-facebook-profile-photo.jpg";
 	String name;
 	String password;
 	boolean gender; // true = male
@@ -49,7 +54,7 @@ public class UserInfo {
 		return;
 	}
 	public String getGender() { 
-		return this.gender ? "female" : "male";
+		return this.gender ? "male" : "female";
 	}
 	public boolean getBooleanGender() {
 		return this.gender;
@@ -94,10 +99,10 @@ public class UserInfo {
 		this.image = url;
 	}
 	public String getProfileImage() {
-		if (image == "") {
-			return "http://blogdailyherald.com/wp-content/uploads/2014/10/wallpaper-for-facebook-profile-photo.jpg";
+		if (image.equals("") || image == null) {
+			System.out.println("using default image");
+			return DEFAULT_IMAGE;
 		}
 		else return image;
 	}
-	
 }

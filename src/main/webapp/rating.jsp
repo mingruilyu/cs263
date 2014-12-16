@@ -11,21 +11,20 @@
 <script src="http://www.google.com/jsapi"></script>
 </head>
 <body>
-<%String username = (String)pageContext.getSession().getAttribute("user");
-if (username != null) {
-	UserManager usermanager = UserManager.getUserHandler(username);%>
-	<a href = "/welcome.jsp">go back to home</a><br>
-	<a href = "/rest/log/logout">sign out</a><br>
-	<a id = "switchlink"></a><br>
-	<p id = "displayrate"></p>
-	<div id = "ratedlist"></div>
-	<div id="googleMap" style="width:1200px;height:1200px;"></div>	
-<% } else {%>
+<%	String username = (String)pageContext.getSession().getAttribute("user");
+	if (username != null) { %>
+<a href = "/welcome.jsp">go back to home</a><br>
+<a href = "/rest/log/logout">sign out</a><br>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
+<font size = "5"><strong><a id = "switchlink"></a></strong></font><br>
+<p id = "displayrate"></p>
+<h2>People I have rated</h2>
+<div id = "ratedlist"></div>
+<div id="googleMap" style="width:1200px;height:1200px;"></div>	
+<% 	} else {%>
 <a href = "/login.jsp">sign in</a><br>
-<%	}
-%>
+<%	} %>
 	<script type="text/javascript">
-	
 	$.urlParam = function(name){
 	    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
 	    if (results==null){
@@ -40,15 +39,16 @@ if (username != null) {
 	var ratee;
 
 	function printList(list){
-		var print = "<h2>People I have rated<h2>";
-		print += '<div>';
+		var print = "";
 		for (i = 0; i < list.length; i ++) {
-			print += '<p>' + list[i].name + '</p>';
-			print += '<p>My rate: ' + list[i].myrate + '</p>';
-			print += '<p>Overall rate: ' + list[i].totalrate + '</p>';
-			print += '<img src = ' + list[i].image + ' height = 200 width = 200>' + '<br>';
+			print += '<table>';
+			print += '<tr><td>Name:</td><td>' + list[i].name + '</td></tr>';
+			print += '<tr><td>My rate:</td><td>' + list[i].myrate + '</td></tr>';
+			print += '<tr><td>Overall rate:</td><td>' + list[i].totalrate + '</td></tr>';
+			print += '<tr><td>current location:</td><td>' + list[i].location.city + '</td></tr></table>';
+			print += '<img src = ' + list[i].image + ' height = 200 width = 200>' + '<br><br>';
+			print += '<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>';
 		}
-		print += '</div>';
 		$("#ratedlist").append(print);
 	}
 	

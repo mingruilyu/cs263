@@ -1,7 +1,12 @@
 package rate.ratingmanagement;
 
 import rate.usermanagement.LocationInfo;
-
+/**
+ * This class is used when transmitting back the list of 
+ * unrated user information back to the frontend
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 class UnratedUserInfo {
 	String name;
 	String image;
@@ -20,11 +25,22 @@ class UnratedUserInfo {
 		location.setLongitude(longitude);
 	}	
 }
-
+/**
+ * This class is used when transmitting back the list of 
+ * rated user information back to the frontend
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 class RatedUserInfo {
 	String name;
 	String image;
+	/**
+	 * average rate of all people that have rated him
+	 */
 	long totalrate;
+	/**
+	 * the current user's rate
+	 */
 	long myrate;
 	LocationInfo location = new LocationInfo();
 	RatedUserInfo(String name, String image) {
@@ -47,7 +63,12 @@ class RatedUserInfo {
 		location.setLongitude(longitude);
 	}	
 }
-
+/**
+ * This class is used to transmit back and forth the
+ * rating information.
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 class Rate {
 	String rater;
 	String ratee;

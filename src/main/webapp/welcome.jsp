@@ -29,10 +29,12 @@ String username = (String)pageContext.getSession().getAttribute("user");
 	if (username != null) {
 		UserInfo usermanager = UserManager.getCachedUserInfo(username);%>
 <a href = "/rest/log/logout">sign out</a>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
 <h1>Welcome to LET'S DATE, <%=usermanager.getName()%></h1>
 <img height="200" width="200" src = "<%=usermanager.getProfileImage()%>">
 <p>you login location is</p>
 <p id = "location"><%=UserManager.getLocation(username) %></p>
+
 <% 		if (!UserManager.infoCompletionCheck(usermanager)) {%>
 <h2>Your infomation is not completed, please complete your profile before you start rating</h2>
 <h2>You can be rated by the others only after you upload your profile picture!</h2>
@@ -63,6 +65,7 @@ String username = (String)pageContext.getSession().getAttribute("user");
 	<tr><td>occupation</td><td><%=usermanager.getOccupation() %></td></tr>
 	<%	} %>
 </table>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
 	<% List<String> conversationList = UserManager.getConversationList(username);
 		// get the conversation list
 		if (conversationList.size() == 0) {
@@ -76,6 +79,7 @@ String username = (String)pageContext.getSession().getAttribute("user");
 				out.println("<a href = \"/conversation.jsp?id=" + id + "\">" +"conversation" + count + "</a><br>");
 			}
 		}%>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
 <h1>You can also do the following things</h1>
 <a href = "/update.jsp">Complete and modify your profile</a><br>
 <a href = "/post.jsp">Post your pictures</a><br>

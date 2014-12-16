@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
-<%@ page import = "rate.usermanagement.FacebookLoginRequest" %>
+<%@ page import = "rate.usermanagement.LogProcessor" %>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
@@ -10,10 +10,11 @@
 <title>Insert title here</title>
 </head>
 <body>
-	<h1>Welcome to LET'S DATE application! Choose your login approach:</h1>
-	<h2>1.Login  from Facebook if you first sign up with Facebook</h2><br>
-	<a href = "<%=FacebookLoginRequest.getFacebookAuthURL()%>">Redirect to Facebook to login in</a>
-	<h2>2.Login locally from this website</h2>
+	<h1>Welcome to LET'S DATE application!</h1>
+	<h2>Choose your login approach:</h2>
+	<h2>1.Login from Facebook if you first sign up with Facebook</h2><br>
+	<a href = "<%=LogProcessor.getFacebookAuthURL()%>">Redirect to Facebook to login in</a>
+	<h2>2.Login locally if you have signed up</h2>
 <%	String error = request.getParameter("error");
 	if (error!= null) {
 	if (error.equals("1")) {
@@ -24,6 +25,7 @@
 <% } else if (error.equals("3")) {%>
 <font color = "red">User does not exist! Please signup first!</font>
 <%} }%>
+	<font id = 'warning' color = 'red'></font>
 	<form action = "/rest/log/directlogin" method = "get" id = "form">
 		<div><input type = "text" name = "username"/>username</div>
 		<div><input type = "password" name = "password"/>password</div>
@@ -39,6 +41,10 @@
 		var userForm = document.getElementById("form");
 		var username = userForm.elements[0].value;
 		var password = userForm.elements[1].value;
+		if (username == "") {
+			$("#warning").text("You have to specify a username!");
+			return;
+		}
 		var url = "/rest/log/directlogin?username=" + username + "&password=" + password;
 		$(location).attr('href',url);
 	}

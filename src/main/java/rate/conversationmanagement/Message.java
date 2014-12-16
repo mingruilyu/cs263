@@ -1,7 +1,11 @@
 package rate.conversationmanagement;
 
 import java.util.Date;
-
+/**
+ * This class represents a new message
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 public class Message {
 	String sender;
 	String receiver;

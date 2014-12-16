@@ -3,6 +3,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -22,17 +25,32 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.gson.stream.JsonReader;
-
+/**
+ * This class manages operations of conversations between two users
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 @Path("/conversation")
 public class ConversationManager {
 	public static DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	final static long HIGH_SCORE = 80;
 	final static int TOKEN_LENGTH = 10;
 	@Context HttpServletRequest request;
-	
+	/**
+	 * This method get one of the speaker in a conversation thread. This speaker is
+	 * different from the the speaker specified by the input parameter "receiver".
+	 * In order to do this, table "conversationthread" is queried to get the two speakers
+	 * that involve in the conversation specified by "token", the conversation id.
+	 * One of the two speaker that is different from the "receiver".
+	 * @param token the unique id of the conversation.
+	 * @param receiver one of the speaker of the conversation
+	 * @return the other speaker who is different from the "receiver"
+	 * @throws EntityNotFoundException if the corresponding conversation thread is not found.
+	 */
 	public static String getSender(String token, String receiver) throws EntityNotFoundException {
 		Key tokenKey = KeyFactory.createKey("conversationthread", token);
 		Entity conversationEntity = datastore.get(tokenKey);
@@ -41,7 +59,25 @@ public class ConversationManager {
 		if (receiver.equals(talker1)) return talker2;
 		else return talker1;
 	}
-	
+	/**
+	 * This method is a REST GET API. It initializes a conversation between two speakers that rate
+	 * each other with high score. 
+	 * 1.	It first checks the "conversationthread" table. If the conversation
+	 * specified by the token already exist in the table and it has a field "activated" that is true,
+	 * it means the conversation thread has already been initialized. Otherwise, put the name of two
+	 * speakers to the conversationthread's corresponding fields. 
+	 * 
+	 * 2.	It then adds the conversation to the conversation list of each speaker. The conversation
+	 * list is contained in "conversationlist" table.
+	 * 
+	 * 3.	At last, it adds the first message sent by the system to the corresponding conversation
+	 * thread. All message of the same conversation thread have the same parent key "threadid" and 
+	 * are stored in the "conversation" table.
+	 * 
+	 * @param token the unique id of a conversation
+	 * @return a redirect response that causes the previous page jumps to the login page.
+	 * @throws EntityNotFoundException if any of the keys is not found in the corresponding table
+	 */
 	@GET
 	@Path("/add/{token}")
 	public Response initializeConversation(@PathParam("token") String token) throws EntityNotFoundException {
@@ -86,7 +122,10 @@ public class ConversationManager {
 		datastore.put(message2Entity);
 		return Response.seeOther(URI.create("/login.jsp")).build();
 	}
-
+	/**
+	 * This method generate a 10-digit random conversation id.
+	 * @return a string of the conversation id
+	 */
 	static public String generateConversationToken() {
 		StringBuilder token = new StringBuilder();
 		int digit;
@@ -96,7 +135,15 @@ public class ConversationManager {
 		}
 		return token.toString();
 	}
-	
+	/**
+	 * This method is a REST POST API. It does the following thins in sequence:
+	 * 1.	it checks whether the new rate is over 80. If it does not, do nothing.
+	 * 2.	it checks if the current ratee has already rated the current rater before
+	 * with a high score. If it does not, then put a task into the task queue
+	 * to warn the current ratee that someone wants to date with him. If it does, then
+	 * put a task into the task queue to send the ratee an activation link.
+	 * @throws EntityNotFoundException if the rate history of the ratee is not found.
+	 */
 	@Path("/check")
 	@POST
 	public void conversationCheck() throws EntityNotFoundException {
@@ -109,15 +156,16 @@ public class ConversationManager {
 		Entity rateeEntity = datastore.get(rateeKey);
 		String email = (String)rateeEntity.getProperty("email");
 		
-		//Try to get the ratee's rate history, see if ratee has also rated the rater
-		Key rateeHistoryKey = new KeyFactory.Builder("user", ratee)
-											.addChild("ratehistory", rater)
-											.getKey();
+		if (rate < HIGH_SCORE) return; // if the rate is less than high score, do nothing
 		try {
+			//Try to get the ratee's rate history, see if ratee has also rated the rater
+			Key rateeHistoryKey = new KeyFactory.Builder("user", ratee)
+												.addChild("ratehistory", rater)
+												.getKey();
 			// the ratee should get the activation email
 			Entity rateeHistoryEntity = datastore.get(rateeHistoryKey);
 			long rateerate = (Long)rateeHistoryEntity.getProperty("rate");
-			if (rateerate >= HIGH_SCORE && rate >= HIGH_SCORE) {	// we found a match
+			if (rateerate >= HIGH_SCORE) {	// we found a match
 				// Generated conversation token, add to the conversationthread
 				String conversationToken = generateConversationToken();
 				Entity conversationThreadEntity = new Entity("conversationthread", conversationToken);
@@ -135,6 +183,7 @@ public class ConversationManager {
 			}
 		}
 		catch(EntityNotFoundException ex) {
+			// this means that the ratee has not rated the rater
 			// the ratee should get the email alert
 			Queue taskqueue = QueueFactory.getDefaultQueue();
 	        taskqueue.add(withUrl("/rating/messenger/alert")
@@ -142,7 +191,20 @@ public class ConversationManager {
 	        			  .param("receiver", ratee));
 		}
 	}
-		
+	/**
+	 * This method is a REST POST API. It adds a new message to the conversation.
+	 * 1.	it extracts the message body out of the Json string.
+	 * 2.	Query the "conversationthread" table to get the name of two speakers,
+	 * using conversation id.
+	 * 3.	Fill in the message header with the sender and receiver and put the Message
+	 * entity into the datastore.
+	 * 
+	 * @param jsonstring the Json string that contains the message body
+	 * @param conversationToken the unique id of the conversation
+	 * @return a redirect link that cause the previous page to jump to the conversation page
+	 * @throws IOException if the JsonReader fails to read the Json string.
+	 * @throws EntityNotFoundException if the conversation if not found in the "conversationthread" table
+	 */
 	@Path("/send/{token}")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -180,4 +242,26 @@ public class ConversationManager {
 	    
 	    return Response.seeOther(URI.create("/conversation.jsp?id=" + conversationToken)).build();
 	}
+	/**
+	 * This method get all the messages of a conversation thread.
+	 * It queries the "conversation" table with the unique conversation
+	 * id as the key.
+	 * @param conversationId the unique conversation id
+	 * @return a linked list of the Message objects.
+	 */
+	public static List<Message> getMessageList(String conversationId) { 
+		List<Message> messageList = new LinkedList<Message>();
+		Key conversationThreadKey = KeyFactory.createKey("threadid", conversationId);
+	    Query query = new Query("conversation", conversationThreadKey).addSort("date", Query.SortDirection.ASCENDING);
+	    for (Iterator<Entity> iterator = datastore.prepare(query).asIterator(); iterator.hasNext(); ) {
+	    	Entity entity = iterator.next();
+	    	Message message = new Message();
+	    	message.setSender((String)entity.getProperty("sender"));
+	    	message.setReceiver((String)entity.getProperty("receiver"));
+	    	message.setDate((Date)entity.getProperty("date"));
+	    	message.setBody((String)entity.getProperty("content"));
+	    	messageList.add(message);
+	    }
+	    return messageList;
+    }
 }

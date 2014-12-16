@@ -1,7 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
 <%@ page import="rate.usermanagement.UserManager"%>
-<%@ page import="rate.conversationmanagement.MessageReader"%>
 <%@ page import="rate.conversationmanagement.Message"%>
 <%@ page import="rate.conversationmanagement.ConversationManager"%>
 <%@ page import="java.util.*" %>
@@ -20,13 +19,13 @@ String sender = username;
 String talkee = ConversationManager.getSender(conversationId, username);
 String infourl = "/personalinfo.jsp?talkee=" + talkee;
 List<Message> messageList;
-	if (username != null) {
-		//UserManager usermanager = UserManager.getUserHandler(username);%>
+	if (username != null) {%>
 <a href = "/rest/log/logout">sign out</a><br>
 <a href = "/welcome.jsp">go back to home</a><br>
-<a href = <%=infourl %>>see <%= talkee %> 's profile</a>
+<font color = "green" size = "5"><strong><a href = <%=infourl %>>See <%= talkee %> 's profile</a></strong></font>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="80%" color=#987cb9 SIZE=3>
 <%
-		messageList = MessageReader.getMessageList(conversationId);
+		messageList = ConversationManager.getMessageList(conversationId);
 		String align = "left";
 		for (Message message : messageList) {
 			if (message.getSender().equals("admin") && !message.getReceiver().equals(username)) continue;

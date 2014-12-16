@@ -1,25 +1,8 @@
 package rate.usermanagement;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.blobstore.BlobstoreService;
-import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -27,147 +10,153 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.CompositeFilter;
-import com.google.appengine.api.datastore.Query.Filter;
-import com.google.appengine.api.datastore.Query.FilterOperator;
-import com.google.appengine.api.datastore.Query.FilterPredicate;
-import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
-import com.google.gson.stream.JsonReader;
-
+/**
+ * This class contains static methods that operation on the registered user 
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 public class UserManager {
-	public UserInfo user = null;
+	/**
+	 * this static field refers to the GAE datastore low-level api
+	 */
 	static public DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	/**
+	 * this static field refers to the GAE memcache low-level api
+	 */
 	static MemcacheService memCache = MemcacheServiceFactory.getMemcacheService();
-	public UserManager(Entity userEntity) throws EntityNotFoundException {
-			this.user = new UserInfo();
-			if (userEntity.getProperty("gender") == null)
-				System.out.println("null");
-			this.user.setName((String)userEntity.getKey().getName());
-
-			String username = userEntity.getKey().getName();
-				this.user.setEmail((String)userEntity.getProperty("email"));
-				memCache.put(username + "email", (String)userEntity.getProperty("email"));
-				this.user.setBirthDate((String)userEntity.getProperty("birthdate"));
-				memCache.put(username + "birthdate", (String)userEntity.getProperty("birthdate"));
-				this.user.setProfileImage((String)userEntity.getProperty("image"));
-				memCache.put(username + "image", (String)userEntity.getProperty("image"));
-				this.user.setHobby((String)userEntity.getProperty("hobby"));
-				memCache.put(username + "hobby", (String)userEntity.getProperty("hobby"));
-				this.user.setClub((String)userEntity.getProperty("club"));
-				memCache.put(username + "club", (String)userEntity.getProperty("club"));
-				this.user.setOccupation((String)userEntity.getProperty("occupation"));
-				memCache.put(username + "occupation", (String)userEntity.getProperty("occupation"));
-				this.user.setMotto((String)userEntity.getProperty("motto"));
-				memCache.put(username + "motto", (String)userEntity.getProperty("motto"));
-				this.user.setSchool((String)userEntity.getProperty("school"));
-				memCache.put(username + "school", (String)userEntity.getProperty("school"));
-			// get the rate information from the datastore
-			Key rateKey = new KeyFactory.Builder("user", this.user.getName())
-										.addChild("ratestat", this.user.getName()).getKey();
-			Entity rateStatEntity = datastore.get(rateKey);
-			this.user.setRate((Long)rateStatEntity.getProperty("rate"));
-			memCache.put(username + "rate", (Long)rateStatEntity.getProperty("rate"));
-	}
-	
-	public static UserManager getUserHandler(String username) throws EntityNotFoundException{
+	/**
+	 * This method create a new UserInfo from the userEntity
+	 * 1.	it fetches the user entity specified by the "username" from the datastore.
+	 * 2.	it uses all parameters to initialize corresponding fields of the newly
+	 * created UserInfo object.
+	 * 3.	For each of the field of the UserInfo, it also put a copy into memcache 
+	 * in form of (username + fieldname, value). So memcache will cache all the 
+	 * user information that has already been referred to in the previous operations.
+	 * @param username the name of the current user
+	 * @return the newly created UserInfo with all the fields filled 
+	 * @throws EntityNotFoundException if the rate statistics of this user if not found
+	 */
+	public static UserInfo createUser(String username) throws EntityNotFoundException {
+		UserInfo user = new UserInfo();
 		Key userKey = KeyFactory.createKey("user", username);
 		Entity userEntity = datastore.get(userKey);
 		// deposit the logged in user info to the mem cache
+		memCache.put(username + "name", (Boolean)userEntity.getProperty("name"));
+		user.setName(username);
+		
 		memCache.put(username + "gender", (Boolean)userEntity.getProperty("gender"));
-		return new UserManager(userEntity);
+		user.setGender((Boolean)userEntity.getProperty("gender"));
+		
+		memCache.put(username + "password", (String)userEntity.getProperty("password"));
+
+		user.setEmail((String) userEntity.getProperty("email"));
+		memCache.put(username + "email",
+				(String) userEntity.getProperty("email"));
+		
+		user.setBirthDate((String) userEntity.getProperty("birthdate"));
+		memCache.put(username + "birthdate",
+				(String) userEntity.getProperty("birthdate"));
+		
+		user.setProfileImage((String) userEntity.getProperty("image"));
+		memCache.put(username + "image",
+				(String) userEntity.getProperty("image"));
+		
+		user.setHobby((String) userEntity.getProperty("hobby"));
+		memCache.put(username + "hobby",
+				(String) userEntity.getProperty("hobby"));
+		
+		user.setClub((String) userEntity.getProperty("club"));
+		memCache.put(username + "club", (String) userEntity.getProperty("club"));
+		
+		user.setOccupation((String) userEntity.getProperty("occupation"));
+		memCache.put(username + "occupation",
+				(String) userEntity.getProperty("occupation"));
+		
+		user.setMotto((String) userEntity.getProperty("motto"));
+		memCache.put(username + "motto",
+				(String) userEntity.getProperty("motto"));
+		
+		user.setSchool((String) userEntity.getProperty("school"));
+		memCache.put(username + "school",
+				(String) userEntity.getProperty("school"));
+		
+		// get the rate information from the datastore
+		Key rateKey = new KeyFactory.Builder("user", user.getName())
+				.addChild("ratestat", user.getName()).getKey();
+		Entity rateStatEntity = datastore.get(rateKey);
+		user.setRate((Long) rateStatEntity.getProperty("rate"));
+		memCache.put(username + "rate",
+				(Long) rateStatEntity.getProperty("rate"));
+		
+		return user;
 	}
-	
+	/**
+	 * This method check the completion of the user information, including email, birthdate,
+	 * motto, occupation, club, hobby, school.
+	 * @param user the user that is checked
+	 * @return true if all information is completed. false if any of the required field is
+	 * not filled.
+	 */
 	public static boolean infoCompletionCheck(UserInfo user) {
 		// true if everything is completed
-		return (user.getBirthDate() != null && user.getClub() != null
+		return (user.getBirthDate() != null && user.getHobby() != null && user.getClub() != null
 				&& user.getEmail() != null && user.getMotto() != null
-				&& user.getOccupation() != null && user.getProfileImage() != null
+				&& user.getOccupation() != null && !user.getProfileImage().equals(UserInfo.DEFAULT_IMAGE)
 				&& user.getSchool() != null);
 	}
-	
+	/**
+	 * This method tries to create a UserInfo from the cache information. 
+	 * If the user information is not previously loaded into cache, it will automatically
+	 * invoke createUser(username) method to get a new UserInfo
+	 * @param username the name of the current user
+	 * @return the newly created UserInfo
+	 * @throws EntityNotFoundException  
+	 */
 	public static UserInfo getCachedUserInfo(String username) throws EntityNotFoundException {
 		UserInfo user = new UserInfo();
 		user.setName(username);
-		String location, email, image, birthdate, school, motto, club, hobby, occupation;
+		String password, email, image, birthdate, school, motto, club, hobby, occupation;
 		Boolean gender;
 		Long rate;
+		// there are two situations where memcache get a null value
+		// 1.	the key exist in the memcache, and its value is null
+		// 2.	the key does not exist in the memcache
+		// if password information is in memcache, so will be the rest information of this user
+		if((password = (String)memCache.get(username + "password")) != null)
+			user.setPassword(password);
+		else return createUser(username);
 		if((gender = (Boolean)memCache.get(username + "gender") != null))
 			user.setGender(gender);
-		else return getUserHandler(username).user;
 		if((email = (String)memCache.get(username + "email")) != null)
 			user.setEmail(email);
-		//else return getUserHandler(username).user;
 		if ((image = (String)memCache.get(username + "image")) != null)
 			user.setProfileImage(image);
-		//else return getUserHandler(username).user;
 		if ((rate = (Long)memCache.get(username + "rate")) != null)
 			user.setRate((Long)rate);
-		//else return getUserHandler(username).user;
 		if ((birthdate = (String)memCache.get(username + "birthdate")) != null)
 			user.setBirthDate(birthdate);
-		//else return getUserHandler(username).user;
 		if ((club = (String)memCache.get(username + "club")) != null)
 			user.setClub(club);
-		//else return getUserHandler(username).user;
 		if ((hobby = (String)memCache.get(username + "hobby")) != null)
 			user.setHobby(hobby);
-		//else return getUserHandler(username).user;
 		if ((occupation = (String)memCache.get(username + "occupation")) != null)
 			user.setOccupation(occupation);
-		//else return getUserHandler(username).user;
 		if ((motto = (String)memCache.get(username + "motto")) != null)
 			user.setMotto(motto);
-		//else return getUserHandler(username).user;
 		if ((school = (String)memCache.get(username + "school")) != null)
 			user.setSchool(school);
-		//else return getUserHandler(username).user;
 		return user;
 	}
 	
-	public static boolean registerUser(Map<String, String> attrMap) {
-		String password, email, birthdate, location, userName, gender, image;
-		Entity userEntity;
-		if (attrMap == null) return false;
-
-		if ((userName = attrMap.get("username"))!= null)
-			userEntity = new Entity("user",userName);
-		else return false;
-		
-		// check whether the user has existed in the datastore
-		Key userKey = KeyFactory.createKey("user", userName);
-		try {
-			datastore.get(userKey);
-			return true;
-		}
-		catch(EntityNotFoundException ex) {
-			if ((image = attrMap.get("image"))!= null) 
-				userEntity.setProperty("image", image);
-			if ((password = attrMap.get("password"))!= null) 
-				userEntity.setProperty("password", password);
-			if ((email = attrMap.get("email"))!= null)
-				userEntity.setProperty("email", email);
-			if ((gender = attrMap.get("gender"))!= null) {
-				if (gender.compareTo("male") == 0)
-					userEntity.setProperty("gender", true);
-				else userEntity.setProperty("gender", false);
-			}
-			if ((birthdate = attrMap.get("birthdate"))!= null)
-				userEntity.setProperty("birthdate", birthdate);
-			if ((location = attrMap.get("location"))!= null)
-				userEntity.setProperty("location", location);
-			datastore.put(userEntity);
-			// initialize the rating statistics upon register
-			//Key rateKey = KeyFactory.createKey("user", userName);
-			Entity userRatingStatEntity = new Entity("ratestat", userName, userKey);
-			userRatingStatEntity.setProperty("rate", 0);
-			userRatingStatEntity.setProperty("ratecount", 0);
-			datastore.put(userRatingStatEntity);
-		}
-		return true;
-	}
-	
+	/**
+	 * This method get the conversation list of the user. It queries the "conversationlist"
+	 * table to get all conversation threads that has the user as their parent key. The 
+	 * conversations are sorted into the descending order of the date.
+	 * @param user the name of the current user, the owner of the conversation list
+	 * @return a list of conversation thread id.
+	 */
 	public static List<String> getConversationList(String user) {
 		// return conversation ID
 	    List<String> conversationList = new LinkedList<String>();
@@ -179,8 +168,12 @@ public class UserManager {
 	    }
 	    return conversationList;
 	}
-	
-	public static String getLocation(String username) throws EntityNotFoundException {
+	/**
+	 * This method get the location of the current user.
+	 * @param username the user whose location we want to get
+	 * @return the city of the user
+	 */
+	public static String getLocation(String username) {
 		return (String)memCache.get(username + "city");
 	}
 }

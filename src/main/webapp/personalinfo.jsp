@@ -2,8 +2,8 @@
     pageEncoding="ISO-8859-1"%>
 <%@ page import="rate.usermanagement.UserManager"%>
 <%@ page import="rate.usermanagement.UserInfo"%>
-<%@ page import="rate.conversationmanagement.PostProcessor"%>
-<%@ page import="rate.conversationmanagement.Post"%>
+<%@ page import="rate.postmanagement.PostProcessor"%>
+<%@ page import="rate.postmanagement.Post"%>
 <%@ page import="com.google.appengine.api.blobstore.BlobKey"%>
 <%@ page import="com.google.appengine.api.blobstore.BlobstoreServiceFactory"%>
 <%@ page import="com.google.appengine.api.blobstore.BlobstoreService"%>
@@ -23,6 +23,7 @@ String username = (String)pageContext.getSession().getAttribute("user");
 		UserInfo usermanager = UserManager.getCachedUserInfo(talkee);%>
 <a href = "/rest/log/logout">sign out</a><br>
 <a href = "/welcome.jsp">go back to home</a>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
 <h2><%=talkee %>'s infomation</h2>
 <p><%=usermanager.getName() %> </p>
 <img height="200" width="200" src = "<%=usermanager.getProfileImage()%>">
@@ -51,19 +52,18 @@ String username = (String)pageContext.getSession().getAttribute("user");
 	<tr><td>occupation</td><td><%=usermanager.getOccupation() %></td></tr>
 	<%	} %>
 </table>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
 <h2><%=talkee %>'s posts</h2>
 <% 	
 	List<Post> postList = PostProcessor.getPost(talkee);
 		for (Post post : postList) {
 			if (post.getContents() != null) { %>
-<p>Date: <%=post.getDate() %></p>
+<p><strong>Date: <%=post.getDate() %></strong></p>
 <p><%=post.getContents() %></p>
-<%			
-			} 
+<%			} 
 			if (post.getImage() != null) { %>
 <img src = "<%=post.getImage()%>" height = "200" width = "200"><br>
-<%
-			}
+<%			}
 		}
 	}
 	else {	%>

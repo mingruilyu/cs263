@@ -1,5 +1,9 @@
 package rate.usermanagement;
-
+/**
+ * This class contains the location information of the current user
+ * @author Mingrui Lyu
+ * @version 1.0
+ */
 public class LocationInfo {
 	double latitude;
 	double longitude;

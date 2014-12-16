@@ -66,6 +66,10 @@
 				$("#warning").text("You have to specify a effective email address!");
 				return;
 			}
+			if (userObj.birthdate == "") {
+				$("#warning").text("You have to specify your birthdate!");
+				return;
+			}
 			var userJson = JSON.stringify(userObj);
 			console.log(userJson);
 			// AJAX code to submit form.
@@ -77,12 +81,12 @@
 				contentType: 'application/json',
 				success: function(result) {
 					if (result == "1")  {
-						alert("created");
+						alert("The new user has been created");
 						var url = "/login.jsp";    
 						$(location).attr('href',url);
 					}
 					else {
-						alert("User already exist!");
+						alert("User already exists!");
 					}
 				},
 				error: function (response) {

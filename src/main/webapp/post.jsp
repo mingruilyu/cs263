@@ -2,8 +2,8 @@
     pageEncoding="ISO-8859-1"%>
 <%@ page import="rate.usermanagement.UserManager"%>
 <%@ page import="rate.usermanagement.UserInfo"%>
-<%@ page import="rate.conversationmanagement.PostProcessor"%>
-<%@ page import="rate.conversationmanagement.Post"%>
+<%@ page import="rate.postmanagement.PostProcessor"%>
+<%@ page import="rate.postmanagement.Post"%>
 <%@ page import="com.google.appengine.api.blobstore.BlobKey"%>
 <%@ page import="com.google.appengine.api.blobstore.BlobstoreServiceFactory"%>
 <%@ page import="com.google.appengine.api.blobstore.BlobstoreService"%>
@@ -28,17 +28,17 @@ String username = (String)pageContext.getSession().getAttribute("user");
 	for (Post post : postList) {
 		if (post.getContents() != null) {
 		 %>
-<p>Date: <%=post.getDate() %></p>
+<p><strong>Date: <%=post.getDate() %></strong></p>
 <p><%=post.getContents() %></p>
 <%			
 		} 
 		if (post.getImage() != null) { %>
-<img src = "<%=post.getImage()%>" height = "200" width = "200"><br>
+<img src = "<%=post.getImage()%>" height = "200" width = "200"><br><br>
 <%
 		}
 	}
 %>
-<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="80%" color=#987cb9 SIZE=3>
+<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
 <h2>Post new comments</h2>
 <% 
 	String blobkey;
@@ -85,14 +85,14 @@ String username = (String)pageContext.getSession().getAttribute("user");
 					// AJAX code to submit form.
 					$.ajax({
 						type: 'POST',
-						url: '/conversation/post/postnew',
+						url: '/post/post/postnew',
 						data: userJson,
 						async: false,
 						//dataType: "json",
 						contentType: 'application/json',
 						success: function(result) {
 							alert("Posted new status!");
-							var url = window.location.href;    
+							var url = "/post.jsp";    
 							$(location).attr('href',url);
 						},
 						error: function (response) {
