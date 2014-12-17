@@ -60,8 +60,7 @@
 <input id = "rateselect" type = "number" name = "rate" min = "0" max = "100" step = "20" value = "60">
 <button id ="submitrate">rate</button>
 <h2><%= rateemanager.getName()%>'s Posts</h2>
-<% 	
-			List<Post> postList = PostProcessor.getPost(rateemanager.getName());
+<% 	List<Post> postList = PostProcessor.getPost(rateemanager.getName());
 			for (Post post : postList) {
 				if (post.getContents() != null) { %>
 <p><strong>Date: <%=post.getDate() %></strong></p>

@@ -81,9 +81,9 @@ String username = (String)pageContext.getSession().getAttribute("user");
 		}%>
 <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
 <h1>You can also do the following things</h1>
-<a href = "/update.jsp">Complete and modify your profile</a><br>
-<a href = "/post.jsp">Post your pictures</a><br>
-<a href = "/rating.jsp?view=1">Start the rating</a><br>
+<font size = "6" color = "green"><a href = "/update.jsp">1. Complete and modify your profile</a><br>
+<a href = "/post.jsp">2. Post news</a><br>
+<a href = "/rating.jsp?view=1">3. Start rating</a><br></font>
 <%
 	}
 	else {	%>

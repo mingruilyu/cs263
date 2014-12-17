@@ -48,7 +48,7 @@
 			var userform = document.getElementById("info");
 			
 			var userObj = {
-				username : userform.elements[0].value,
+				username : userform.elements[0].value.replace(/\s+/g,''),
 				password : userform.elements[1].value,
 				email : userform.elements[2].value,
 				gender : userform.elements[3].value,

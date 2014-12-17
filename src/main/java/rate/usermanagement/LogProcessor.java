@@ -47,8 +47,8 @@ public class LogProcessor {
 	static final String APPID = "732083976882116";
 	static final String APPSECRET = "eacc38539438a41c127ec7e1c6662994";
 	static final String AUTH_URL = "https://www.facebook.com/dialog/oauth";
-	// static String redirectUrl = "http://lyumingrui1.appspot.com/rest/log/facebooklogin";
-	static final String REDIRECT_URL = "http://localhost:8080/rest/log/facebooklogin";
+	static final String REDIRECT_URL = "http://lyumingrui1.appspot.com/rest/log/facebooklogin";
+	//static final String REDIRECT_URL = "http://localhost:8080/rest/log/facebooklogin";
 	static final String TOKEN_URL = "https://graph.facebook.com/oauth/access_token";
 	static final String PERMISSION = "email,user_friends,user_birthday,user_hometown";
 	static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();

@@ -23,7 +23,7 @@
 		<a href = "/welcome.jsp">go back to home</a><br>
 		<h2>Update Profile Information</h2>
 		<HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="80%" color=#987cb9 SIZE=3>
-		<h3>You can either upload a new profile picture or use a URL to a image as your profile picture<br>
+		<h3>You can upload a new profile picture<br>
 		To upload file, click "Choose File" to select image and then click "Submit". <br>
 		After you have filled in all other tables, click "update" to update your profile<br>
 		To use URL, make sure you put into the table a valid image URL</h3>

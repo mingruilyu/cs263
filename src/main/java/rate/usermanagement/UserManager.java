@@ -38,6 +38,7 @@ public class UserManager {
 	 * @return the newly created UserInfo with all the fields filled 
 	 * @throws EntityNotFoundException if the rate statistics of this user if not found
 	 */
+
 	public static UserInfo createUser(String username) throws EntityNotFoundException {
 		UserInfo user = new UserInfo();
 		Key userKey = KeyFactory.createKey("user", username);
